@@ -4,7 +4,6 @@
     using FakeItEasy;
     using MediatR;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Options;
     using WuQu.Extensions;
     using WuQu.HeartBeat;
     using WuQu.Http;
@@ -17,7 +16,7 @@
             services.AddWuQu();
 
             services.AddSingleton(FakeHttpService);
-            services.AddSingleton(Options.Create(HeartBeatOptions));
+            services.AddSingleton(HeartBeatOptions);
             
             Services = services.BuildServiceProvider();
 

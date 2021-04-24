@@ -26,7 +26,7 @@
             this IServiceCollection services,
             IConfiguration configuration)
         {
-            services.Configure<HeartBeatOptions>(configuration.GetSection(HeartBeatOptions.ConfigurationKey));
+            services.Configure<HeartBeatOptions>(configuration.GetSection(HeartBeatOptions.HeartBeat));
             services.AddSingleton<IHttpService, HttpService>();
             return services;
         }

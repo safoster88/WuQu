@@ -2,7 +2,7 @@
 {
     public record HeartBeatOptions
     {
-        public const string ConfigurationKey = "HeartBeat";
+        public const string HeartBeat = "HeartBeat";
         
         public int HeartBeatIntervalInSeconds { get; init; }
     }
