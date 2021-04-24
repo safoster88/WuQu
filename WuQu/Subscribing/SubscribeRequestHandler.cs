@@ -28,7 +28,10 @@
         {
             logger.Information("Processing subscription request - {@SubscribeRequest}", request);
 
-            await heartBeater.Execute(request.BaseAddress, request.HeartBeatEndPoint);
+            if (!await heartBeater.Execute(request.BaseAddress, request.HeartBeatEndPoint))
+            {
+                throw new HeartBeatFailedException();
+            }
 
             subscriptions.Add(new Subscription
             {

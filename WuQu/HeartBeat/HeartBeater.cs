@@ -19,25 +19,26 @@
             this.logger = logger;
         }
 
-        public Task Execute(Subscription subscription) =>
+        public Task<bool> Execute(Subscription subscription) =>
             Execute(subscription.BaseAddress, subscription.HeartBeatEndPoint);
 
-        public Task Execute(string baseAddress, string relativeUrl)
+        public Task<bool> Execute(string baseAddress, string relativeUrl)
         {
             var heartBeatUri = new Uri(new Uri(baseAddress), relativeUrl);
             return Execute(heartBeatUri);
         }
 
-        public async Task Execute(Uri uri)
+        public async Task<bool> Execute(Uri uri)
         {
             try
             {
                 await httpService.Get(uri.ToString());
+                return true;
             }
             catch (Exception e)
             {
                 logger.Debug(e, "HeartBeat Failed");
-                throw new HeartBeatFailedException(e);
+                return false;
             }
         }
     }

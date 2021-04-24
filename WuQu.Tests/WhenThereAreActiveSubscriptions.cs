@@ -3,6 +3,8 @@
     using System;
     using System.Threading.Tasks;
     using FakeItEasy;
+    using FluentAssertions;
+    using Microsoft.Extensions.DependencyInjection;
     using WuQu.Subscribing;
     using Xunit;
 
@@ -47,9 +49,9 @@
                 }
             }
         };
-        
+
         private readonly TestBootstrapper bootstrapper = new();
-        
+
         public WhenThereAreActiveSubscriptions()
         {
             // Setup subscriptions
@@ -76,11 +78,62 @@
             for (var i = 0; i < numberOfWaits; i++)
             {
                 await Task.Delay(TimeSpan.FromSeconds(bootstrapper.HeartBeatOptions.HeartBeatIntervalInSeconds));
-                
+
                 // first 1 accounts for initial heartbeat on subscription.
                 AssertHeartBeatOccured(endpoint1, 1 + i + 1);
                 AssertHeartBeatOccured(endpoint2, 1 + i + 1);
             }
+        }
+    }
+
+    public class WhenThereAreActiveSubscriptionsButAHeartBeatFails
+    {
+        private readonly SubscribeRequest[] subscribeRequests = new[]
+        {
+            new SubscribeRequest
+            {
+                BaseAddress = "https://myaddress.org",
+                HeartBeatEndPoint = "api/heartbeat",
+                Routes = new[]
+                {
+                    new Route
+                    {
+                        Type = "Position",
+                        EndPoint = "api/position"
+                    },
+                    new Route
+                    {
+                        Type = "Users",
+                        EndPoint = "api/Users"
+                    }
+                }
+            }
+        };
+
+        private readonly TestBootstrapper bootstrapper = new();
+
+        public WhenThereAreActiveSubscriptionsButAHeartBeatFails()
+        {
+            // Setup subscriptions
+            foreach (var subscribeRequest in subscribeRequests)
+            {
+                bootstrapper.Mediator.Send(subscribeRequest).Wait();
+            }
+        }
+
+        [Fact]
+        public async Task ThenTheSubscriptionShouldBeRemoved()
+        {
+            var heartBeatEndPoint = "https://myaddress.org/api/heartbeat";
+
+            await Task.Delay(TimeSpan.FromSeconds(bootstrapper.HeartBeatOptions.HeartBeatIntervalInSeconds));
+
+            A.CallTo(() => bootstrapper.FakeHttpService.Get(heartBeatEndPoint))
+                .Throws<Exception>();
+            
+            await Task.Delay(TimeSpan.FromSeconds(bootstrapper.HeartBeatOptions.HeartBeatIntervalInSeconds));
+
+            bootstrapper.Services.GetRequiredService<Subscriptions>().Should().BeEmpty();
         }
     }
 }

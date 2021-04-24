@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Microsoft.Extensions.Options;
@@ -35,17 +36,48 @@
             {
                 logger.Debug("Waiting heartbeat interval");
                 await Task.Delay(TimeSpan.FromSeconds(heartBeatOptions.Value.HeartBeatIntervalInSeconds));
-                var tasks = new List<Task>(subscriptions.Count);
+                var tasks = new List<Task<HeartBeatResult>>(subscriptions.Count);
                 
                 foreach (var subscription in subscriptions)
                 {
-                    tasks.Add(heartBeater.Execute(subscription));
+                    tasks.Add(ExecuteHeartBeatForSubscription(subscription));
                 }
 
                 logger.Debug("Waiting on {HeartBeatCount} heartbeats", tasks.Count);
-                await Task.WhenAll(tasks);
-                logger.Debug("All heartbeats ok");
+                var results = await Task.WhenAll(tasks);
+                var failedHeartBeats = results.Where(x => !x.IsHeartBeatSuccessful).ToList();
+
+                if (failedHeartBeats.Count() > 0)
+                {
+                    foreach (var failure in failedHeartBeats)
+                    {
+                        logger.Information("HeartBeat failed for {BaseAddress} - Removing subscription", failure.Subscription.BaseAddress);
+                        subscriptions.Remove(failure.Subscription);
+                    }    
+                }
+                else
+                {
+                    logger.Debug("All heartbeats ok");
+                }
             } while (!ct.IsCancellationRequested);
+        }
+
+        private async Task<HeartBeatResult> ExecuteHeartBeatForSubscription(
+            Subscription subscription) => new(subscription, await heartBeater.Execute(subscription));
+
+        private struct HeartBeatResult
+        {
+            public HeartBeatResult(
+                Subscription subscription,
+                bool isHeartBeatSuccessful)
+            {
+                Subscription = subscription;
+                IsHeartBeatSuccessful = isHeartBeatSuccessful;
+            }
+            
+            public Subscription Subscription { get; }
+
+            public bool IsHeartBeatSuccessful { get; }
         }
     }
 }
