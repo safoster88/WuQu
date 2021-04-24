@@ -1,28 +1,25 @@
 ﻿namespace WuQu.Subscribing
 {
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
     using MediatR;
     using Serilog;
-    using Serilog.Core;
     using WuQu.HeartBeat;
-    using WuQu.Http;
 
     public class SubscribeRequestHandler : IRequestHandler<SubscribeRequest>
     {
-        private readonly IHttpService httpService;
         private readonly Subscriptions subscriptions;
         private readonly ILogger logger;
+        private readonly HeartBeater heartBeater;
 
         public SubscribeRequestHandler(
-            IHttpService httpService,
             Subscriptions subscriptions,
-            ILogger logger)
+            ILogger logger,
+            HeartBeater heartBeater)
         {
-            this.httpService = httpService;
             this.subscriptions = subscriptions;
             this.logger = logger;
+            this.heartBeater = heartBeater;
         }
 
         public async Task<Unit> Handle(
@@ -30,19 +27,9 @@
             CancellationToken cancellationToken)
         {
             logger.Information("Processing subscription request - {@SubscribeRequest}", request);
-            
-            var heartBeatUri = new Uri(new Uri(request.BaseAddress), request.HeartBeatEndPoint);
 
-            try
-            {
-                await httpService.Get(heartBeatUri.ToString());
-            }
-            catch (Exception e)
-            {
-                logger.Debug(e, "HeartBeat Failed");
-                throw new HeartBeatFailedException(e);
-            }
-            
+            await heartBeater.Execute(request.BaseAddress, request.HeartBeatEndPoint);
+
             subscriptions.Add(new Subscription
             {
                 BaseAddress = request.BaseAddress,
