@@ -34,7 +34,7 @@ namespace WuQu.TestPublisher
                 };
 
                 var response = await Client.PostAsJsonAsync(
-                    "http://localhost:5500/api/PublishRequest",
+                    "http://localhost:5500/api/PublishRequests",
                     new
                     {
                         Type = "Position",

@@ -24,7 +24,7 @@
         {
             var client = httpClientFactory.CreateClient("WuQu");
 
-            var response = await client.PostAsJsonAsync("api/SubscribeRequest", new
+            var response = await client.PutAsJsonAsync("api/Subscriptions", new
             {
                 BaseAddress = "http://localhost:5000",
                 HeartBeatEndPoint = "wuqu/HeartBeat",

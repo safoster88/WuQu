@@ -6,11 +6,11 @@
 
     [ApiController]
     [Route("api/[controller]")]
-    public class PublishRequestController : ControllerBase
+    public class PublishRequestsController : ControllerBase
     {
         private readonly IMediator mediator;
 
-        public PublishRequestController(
+        public PublishRequestsController(
             IMediator mediator)
         {
             this.mediator = mediator;

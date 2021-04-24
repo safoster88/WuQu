@@ -7,18 +7,18 @@
 
     [ApiController]
     [Route("api/[controller]")]
-    public class SubscribeRequestController : ControllerBase
+    public class SubscriptionsController : ControllerBase
     {
         private readonly IMediator mediator;
 
-        public SubscribeRequestController(
+        public SubscriptionsController(
             IMediator mediator)
         {
             this.mediator = mediator;
         }
 
-        [HttpPost]
-        public async Task<ActionResult> Post(
+        [HttpPut]
+        public async Task<ActionResult> Put(
             [FromBody] SubscribeRequest request)
         {
             try
